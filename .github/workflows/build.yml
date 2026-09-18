@@ -1,0 +1,73 @@
+# Basic workflow
+name: build
+
+# Controls when the action will run
+# Workflow begins with push or PR events
+# Focuses on the main branch only
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Create one single job
+# This job performs all necessary checks
+jobs:
+  build:
+    # Use the latest version of Ubuntu on Microsoft Azure
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Performs all actions on different versions of Python
+        python-version: ["3.11"]
+    # Define the workflow steps
+    steps:
+    # Checkout the code of the repository
+        - name: Check out Repository Code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        # Setup Python for the current language version
+        - name: Setup Python ${{ matrix.python-version }}
+          if: always()
+          uses: actions/setup-python@v5
+          with:
+            python-version: ${{ matrix.python-version }}
+        # Test Tutorial 1 - Loops & Conditionals (stdlib only, no UV needed)
+        - name: Test Tutorial 1 Setup
+          if: always()
+          run: |
+            cd tutorials/tutorial_01_loops_and_conditionals
+            python3 -m py_compile dungeon.py
+        # Test Tutorial 2 - Strings & Dictionaries (stdlib only, no UV needed)
+        - name: Test Tutorial 2 Setup
+          if: always()
+          run: |
+            cd tutorials/tutorial_02_strings_and_dictionaries
+            python3 -m py_compile detective.py
+        # Install UV package manager (needed for Tutorial 3's dependencies)
+        - name: Install UV
+          if: always()
+          run: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        # Verify UV installation
+        - name: Verify UV Installation
+          if: always()
+          run: |
+            uv --version
+        # Test Tutorial 3 - Pattern Visualizer
+        - name: Test Tutorial 3 Setup
+          if: always()
+          run: |
+            cd tutorials/tutorial_03_pattern_visualizer
+            uv venv
+            uv pip install matplotlib plotly numpy
+            uv run patterns.py
+        # Run GatorGrader: see config/gatorgrade.yml
+        - name: Run GatorGrader with GatorGrade
+          if: always()
+          run:  |
+            pipx install gatorgrade
+            pipx inject gatorgrade 'click==8.1.7' --force
+            gatorgrade --config config/gatorgrade.yml
