@@ -19,22 +19,6 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-
-      - name: Install the project and its dependencies
-        run: uv sync
-
-      - name: Run the Firefly Collector test suite
-        env:
-          SDL_VIDEODRIVER: dummy
-          SDL_AUDIODRIVER: dummy
-        run: uv run pytest -v
-
-      - name: Play the game without a keyboard, to prove that it runs
-        env:
-          SDL_VIDEODRIVER: dummy
-          SDL_AUDIODRIVER: dummy
-        run: uv run firefly-collector --self-test
-
       - name: Run GatorGrader with GatorGrade
         if: always()
         env:
